@@ -21,7 +21,8 @@ enum Y86InstType {
   i_call    =  8,
   i_ret     =  9,
   i_push    = 10,
-  i_pop     = 11
+  i_pop     = 11,
+  i_cop     = 12
 };
 
 enum Y86InstCondType {
@@ -94,12 +95,12 @@ static std::map<std::string,
   {"halt",     { i_halt, ic_al}},
   {"nop",      {  i_nop, ic_al}},
   {"cmoval",   { i_cmov, ic_al}},
-  {"cmovle",   {  i_jmp, ic_le}},
-  {"cmovl",    {  i_jmp, ic_lt}},
-  {"cmove",    {  i_jmp, ic_eq}},
-  {"cmovne",   {  i_jmp, ic_ne}},
-  {"cmovge",   {  i_jmp, ic_ge}},
-  {"cmovg",    {  i_jmp, ic_gt}},
+  {"cmovle",   { i_cmov, ic_le}},
+  {"cmovl",    { i_cmov, ic_lt}},
+  {"cmove",    { i_cmov, ic_eq}},
+  {"cmovne",   { i_cmov, ic_ne}},
+  {"cmovge",   { i_cmov, ic_ge}},
+  {"cmovg",    { i_cmov, ic_gt}},
   {"jal",      {  i_jmp, ic_al}},
   {"jle",      {  i_jmp, ic_le}},
   {"jl",       {  i_jmp, ic_lt}},
@@ -109,6 +110,8 @@ static std::map<std::string,
   {"jgt",      {  i_jmp, ic_gt}},
   {"call",     { i_call, ic_al}},
   {"ret",      {  i_ret, ic_al}},
+  {"mtc0",     {  i_cop, ic_al}},
+  {"mfc0",     {  i_cop, ic_le}},
 #ifdef y86_32
   {"irmovl",   {i_irmov, ic_al}},
   {"rmmovl",   {i_rmmov, ic_al}},
@@ -153,6 +156,8 @@ static std::map<std::string,
   {"76", {  i_jmp, ic_gt}},
   {"80", { i_call, ic_al}},
   {"90", {  i_ret, ic_al}},
+  {"c0", {  i_cop, ic_al}},
+  {"c1", {  i_cop, ic_le}},
 #ifdef y86_32
   {"30", {i_irmov, ic_al}},
   {"40", {i_rmmov, ic_al}},
@@ -173,7 +178,7 @@ static std::map<std::string,
   {"63", {   i_op, ic_eq}},
   {"a0", { i_push, ic_al}},
   {"b0", {  i_pop, ic_al}}
-#endif  // y86_32
+#endif  // y86_3
 };
 
 static std::map<std::pair<enum Y86InstType,
@@ -191,10 +196,13 @@ static std::map<std::pair<enum Y86InstType,
   {{i_jmp, ic_le}, "jle"},
   {{i_jmp, ic_lt}, "jl"},
   {{i_jmp, ic_eq}, "je"},
+  {{i_jmp, ic_ne}, "jne"},
   {{i_jmp, ic_ge}, "jge"},
   {{i_jmp, ic_gt}, "jg"},
   {{i_call, ic_al}, "call"},
   {{i_ret, ic_al}, "ret"},
+  {{i_cop, ic_al}, "mtc0"},
+  {{i_cop, ic_le}, "mfc0"},
 #ifdef y86_32
   {{i_irmov, ic_al}, "irmovl"},
   {{i_rmmov, ic_al}, "rmmovl"},

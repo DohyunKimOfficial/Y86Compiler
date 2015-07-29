@@ -122,6 +122,7 @@ Y86Assembly::Y86Assembly(std::string hex_str)
       break;
     case i_cmov:
     case i_op:
+    case i_cop:
       this->num_operand = 2;
       this->operand[0] = new Y86Register(hex_str.substr(2,1));
       this->operand[1] = new Y86Register(hex_str.substr(3,1));
@@ -188,12 +189,22 @@ Y86Assembly::to_string() {
 
   std::string result = inst_string[key] + " ";
 
-  for (int32_t i = 0; i < this->num_operand; i++) {
-    result += this->operand[i]->to_string();
+  switch(this->i_inst) {
+    case i_mrmov:
+    case i_rmmov:
+      result += this->operand[0]->to_string() + ",";
+      result += this->operand[2]->to_string().erase(0, 1);
+      result += "(" + this->operand[1]->to_string() + ")";
+      break;
+    default:
+      for (int32_t i = 0; i < this->num_operand; i++) {
+        result += this->operand[i]->to_string();
 
-    if (i < this->num_operand - 1) {
-      result += ",";
-    }
+        if (i < this->num_operand - 1) {
+          result += ",";
+        }
+      }
+      break;
   }
 
   return result;
@@ -212,6 +223,7 @@ Y86Assembly::get_hex_length() {
     case i_cmov:
     case i_push:
     case i_pop:
+    case i_cop:
       length = 4;
       break;
 #ifdef y86_32
