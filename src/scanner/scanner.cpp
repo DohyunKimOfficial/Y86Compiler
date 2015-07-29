@@ -45,14 +45,3 @@ Scanner::is_eof() {
   }
 }
 }
-
-int
-main() {
-  y86compiler::Scanner scanner("input.txt");
-
-  while (!scanner.is_eof()) {
-    std::cout << scanner.get_line() << std::endl;
-  }
-
-  return 0;
-}

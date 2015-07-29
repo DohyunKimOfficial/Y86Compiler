@@ -138,12 +138,12 @@ static std::map<std::string,
   {"00", { i_halt, ic_al}},
   {"10", {  i_nop, ic_al}},
   {"20", { i_cmov, ic_al}},
-  {"21", {  i_jmp, ic_le}},
-  {"22", {  i_jmp, ic_lt}},
-  {"23", {  i_jmp, ic_eq}},
-  {"24", {  i_jmp, ic_ne}},
-  {"25", {  i_jmp, ic_ge}},
-  {"26", {  i_jmp, ic_gt}},
+  {"21", { i_cmov, ic_le}},
+  {"22", { i_cmov, ic_lt}},
+  {"23", { i_cmov, ic_eq}},
+  {"24", { i_cmov, ic_ne}},
+  {"25", { i_cmov, ic_ge}},
+  {"26", { i_cmov, ic_gt}},
   {"70", {  i_jmp, ic_al}},
   {"71", {  i_jmp, ic_le}},
   {"72", {  i_jmp, ic_lt}},
@@ -161,8 +161,8 @@ static std::map<std::string,
   {"61", {   i_op, ic_le}},
   {"62", {   i_op, ic_lt}},
   {"63", {   i_op, ic_eq}},
-  {"A0", { i_push, ic_al}},
-  {"B0", {  i_pop, ic_al}}
+  {"a0", { i_push, ic_al}},
+  {"b0", {  i_pop, ic_al}}
 #else
   {"30", {i_irmov, ic_al}},
   {"40", {i_rmmov, ic_al}},
@@ -171,8 +171,79 @@ static std::map<std::string,
   {"61", {   i_op, ic_le}},
   {"62", {   i_op, ic_lt}},
   {"63", {   i_op, ic_eq}},
-  {"A0", { i_push, ic_al}},
-  {"B0", {  i_pop, ic_al}}
+  {"a0", { i_push, ic_al}},
+  {"b0", {  i_pop, ic_al}}
+#endif  // y86_32
+};
+
+static std::map<std::pair<enum Y86InstType,
+                          enum Y86InstCondType>,
+                std::string> inst_string = {
+  {{i_halt, ic_al}, "halt"},
+  {{i_nop, ic_al}, "nop"},
+  {{i_cmov, ic_al}, "cmoval"},
+  {{i_cmov, ic_le}, "cmovle"},
+  {{i_cmov, ic_lt}, "cmovl"},
+  {{i_cmov, ic_eq}, "cmove"},
+  {{i_cmov, ic_ge}, "cmovge"},
+  {{i_cmov, ic_gt}, "cmovg"},
+  {{i_jmp, ic_al}, "jal"},
+  {{i_jmp, ic_le}, "jle"},
+  {{i_jmp, ic_lt}, "jl"},
+  {{i_jmp, ic_eq}, "je"},
+  {{i_jmp, ic_ge}, "jge"},
+  {{i_jmp, ic_gt}, "jg"},
+  {{i_call, ic_al}, "call"},
+  {{i_ret, ic_al}, "ret"},
+#ifdef y86_32
+  {{i_irmov, ic_al}, "irmovl"},
+  {{i_rmmov, ic_al}, "rmmovl"},
+  {{i_mrmov, ic_al}, "mrmovl"},
+  {{i_op, ic_al}, "addl"},
+  {{i_op, ic_le}, "subl"},
+  {{i_op, ic_lt}, "andl"},
+  {{i_op, ic_eq}, "xorl"},
+  {{i_push, ic_al}, "pushl"},
+  {{i_pop, ic_al}, "popl"}
+#else
+  {{i_irmov, ic_al}, "irmovq"},
+  {{i_rmmov, ic_al}, "rmmovq"},
+  {{i_mrmov, ic_al}, "mrmovq"},
+  {{i_op, ic_al}, "addq"},
+  {{i_op, ic_le}, "subq"},
+  {{i_op, ic_lt}, "andq"},
+  {{i_op, ic_eq}, "xorq"},
+  {{i_push, ic_al}, "pushq"},
+  {{i_pop, ic_al}, "popq"}
+#endif  // y86_32
+};
+
+static std::map<std::string, enum Y86RegisterType> register_parse = {
+#ifdef y86_32
+  {"0", r_eax},
+  {"1", r_ecx},
+  {"2", r_edx},
+  {"3", r_ebx},
+  {"6", r_esi},
+  {"7", r_edi},
+  {"4", r_esp},
+  {"5", r_ebp}
+#else
+  {"0", r_rax},
+  {"1", r_rcx},
+  {"2", r_rdx},
+  {"3", r_rbx},
+  {"6", r_rsi},
+  {"7", r_rdi},
+  {"4", r_rsp},
+  {"5", r_rbp},
+  {"8", r_r8},
+  {"9", r_r9},
+  {"a", r_r10},
+  {"b", r_r11},
+  {"c", r_r12},
+  {"d", r_r13},
+  {"e", r_r14}
 #endif  // y86_32
 };
 
@@ -223,6 +294,12 @@ class Y86Assembly {
               Y86Operand* oper2,
               Y86Operand* oper3,
               Y86Assembly* next);
+  ~Y86Assembly();
+
+  std::string to_string();
+
+  uint32_t get_hex_length();
+
   Y86Assembly* get_next();
   void set_next(Y86Assembly *next);
 };
