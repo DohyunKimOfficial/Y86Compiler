@@ -9,20 +9,20 @@
 
 namespace y86compiler {
 enum Y86InstType {
-  i_unknown = -1,
-  i_halt    =  0,
-  i_nop     =  1,
-  i_cmov    =  2,
-  i_irmov   =  3,
-  i_rmmov   =  4,
-  i_mrmov   =  5,
-  i_op      =  6,
-  i_jmp     =  7,
-  i_call    =  8,
-  i_ret     =  9,
-  i_push    = 10,
-  i_pop     = 11,
-  i_cop     = 12
+  i_unsupported = -1,
+  i_halt        =  0,
+  i_nop         =  1,
+  i_cmov        =  2,
+  i_irmov       =  3,
+  i_rmmov       =  4,
+  i_mrmov       =  5,
+  i_op          =  6,
+  i_jmp         =  7,
+  i_call        =  8,
+  i_ret         =  9,
+  i_push        = 10,
+  i_pop         = 11,
+  i_cop         = 12
 };
 
 enum Y86InstCondType {
@@ -178,7 +178,7 @@ static std::map<std::string,
   {"63", {   i_op, ic_eq}},
   {"a0", { i_push, ic_al}},
   {"b0", {  i_pop, ic_al}}
-#endif  // y86_3
+#endif  // y86_32
 };
 
 static std::map<std::pair<enum Y86InstType,
@@ -293,9 +293,12 @@ class Y86Assembly {
   int32_t num_operand;
   Y86Assembly* next;
 
+  address_t byte_address;
+
  public:
   Y86Assembly();
-  Y86Assembly(std::string hex_str);
+  Y86Assembly(std::string hex_str,
+              address_t byte_address = 0);
   Y86Assembly(Y86InstType i_inst,
               Y86InstCondType ic_inst,
               Y86Operand* oper1,
@@ -307,6 +310,7 @@ class Y86Assembly {
   std::string to_string();
 
   uint32_t get_hex_length();
+  uint32_t get_byte_size();
 
   Y86Assembly* get_next();
   void set_next(Y86Assembly *next);

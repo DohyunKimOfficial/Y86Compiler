@@ -11,6 +11,8 @@ typedef int32_t data_t;
 typedef int64_t data_t;
 #endif  // 32BIT
 
+typedef uint64_t address_t;
+
 #define MAX_LINE_LENGTH 1024
 
 namespace y86compiler {

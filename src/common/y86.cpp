@@ -89,14 +89,20 @@ Y86Immediate::to_string() {
 }
 
 Y86Assembly::Y86Assembly()
-: i_inst(i_unknown), ic_inst(ic_al), num_operand(0), next(NULL) {
+: i_inst(i_unsupported), ic_inst(ic_al), num_operand(0), next(NULL) {
 }
 
-Y86Assembly::Y86Assembly(std::string hex_str)
-: next(NULL) {
+Y86Assembly::Y86Assembly(std::string hex_str, address_t byte_address)
+: next(NULL), byte_address(byte_address) {
   std::string inst_switch = hex_str.substr(0,2);
-  this->i_inst = inst_hex_parse[inst_switch].first;
-  this->ic_inst = inst_hex_parse[inst_switch].second;
+
+  if (inst_hex_parse.find(inst_switch) == inst_hex_parse.end()) {
+    this->i_inst = i_unsupported;
+    this->ic_inst = ic_al;
+  } else {
+    this->i_inst = inst_hex_parse[inst_switch].first;
+    this->ic_inst = inst_hex_parse[inst_switch].second;
+  }
 
   switch (this->i_inst) {
     case i_halt:
@@ -160,7 +166,10 @@ Y86Assembly::Y86Assembly(std::string hex_str)
 #endif  // y86_32
       break;
     default:
-      // TODO default
+      this->num_operand = 0;
+      this->operand[0] = NULL;
+      this->operand[1] = NULL;
+      this->operand[2] = NULL;
       break;
   }
 }
@@ -183,28 +192,33 @@ Y86Assembly::Y86Assembly(Y86InstType i_inst,
 
 std::string
 Y86Assembly::to_string() {
-  std::pair<enum Y86InstType, enum Y86InstCondType> key;
-  key.first = this->i_inst;
-  key.second = this->ic_inst;
+  std::string result = "";
+  if (this->i_inst == i_unsupported) {
+    result += "unsupported (maybe invalid inst OR data)";
+  } else {
+    std::pair<enum Y86InstType, enum Y86InstCondType> key;
+    key.first = this->i_inst;
+    key.second = this->ic_inst;
 
-  std::string result = inst_string[key] + " ";
+    result += inst_string[key] + " ";
 
-  switch(this->i_inst) {
-    case i_mrmov:
-    case i_rmmov:
-      result += this->operand[0]->to_string() + ",";
-      result += this->operand[2]->to_string().erase(0, 1);
-      result += "(" + this->operand[1]->to_string() + ")";
-      break;
-    default:
-      for (int32_t i = 0; i < this->num_operand; i++) {
-        result += this->operand[i]->to_string();
+    switch(this->i_inst) {
+      case i_mrmov:
+      case i_rmmov:
+        result += this->operand[0]->to_string() + ",";
+        result += this->operand[2]->to_string().erase(0, 1);
+        result += "(" + this->operand[1]->to_string() + ")";
+        break;
+      default:
+        for (int32_t i = 0; i < this->num_operand; i++) {
+          result += this->operand[i]->to_string();
 
-        if (i < this->num_operand - 1) {
+          if (i < this->num_operand - 1) {
           result += ",";
+          }
         }
-      }
-      break;
+        break;
+    }
   }
 
   return result;
@@ -250,12 +264,17 @@ Y86Assembly::get_hex_length() {
       length = 20;
       break;
     default:
-      length = 16;
+      length = 2;
       break;
 #endif  // y86_32
   }
 
   return length;
+}
+
+uint32_t
+Y86Assembly::get_byte_size() {
+  return this->get_hex_length()/2;
 }
 
 }  // namespace y86compiler
